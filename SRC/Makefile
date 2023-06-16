@@ -166,7 +166,7 @@ endif
 
 # Define all source files required
 PROJECT_SOURCE_FILES ?= \
-    vbRNG.cpp
+    KT_RNG.cpp
 
 # Define all object files from source files
 OBJS = $(patsubst %.cpp, %.o, $(PROJECT_SOURCE_FILES))
