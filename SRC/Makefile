@@ -1,7 +1,7 @@
 
 .PHONY: all clean
 
-PROJECT_NAME       ?= vbRNG.so
+PROJECT_NAME       ?= KT_RNG.so
 RAYLIB_VERSION     ?= 3.5.0
 PROJPATH           ?= './'
 
