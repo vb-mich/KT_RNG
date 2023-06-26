@@ -232,8 +232,116 @@ int main(int argc, char* argv[])
 {
     startRNG(time(NULL));
 
-    
-    // WRITE ASCII DECKS
+    size_t optind;
+    for (optind = 1; optind < argc && argv[optind][0] == '-'; optind++) {
+        switch (argv[optind][1]) {
+        case 'a': 
+        {
+            // WRITE 0-51 scaled
+            printf("\nWRITE 0-51 scaled");
+            for (size_t seq = 0; seq < 20; seq++)
+            {
+                string fname = "Scaled_[0-51]_" + to_string(seq) + ".txt";
+                FILE* f = fopen(fname.c_str(), "w");
+                for (size_t deck = 0; deck < 300000; deck++)
+                {
+                    fprintf(f, "%d\n", KT_RNG_getRandom(51));
+                }
+                fclose(f);
+                printf("\ndone - %zd", seq);
+            }
+            break;
+        }
+        case 'b':
+        {
+            // WRITE 0-36 scaled
+            printf("\nWRITE 0-36 scaled");
+            for (size_t seq = 0; seq < 20; seq++)
+            {
+                string fname = "Scaled_[0-36]_" + to_string(seq) + ".txt";
+                FILE* f = fopen(fname.c_str(), "w");
+                for (size_t deck = 0; deck < 300000; deck++)
+                {
+                    fprintf(f, "%d\n", KT_RNG_getRandom(36));
+                }
+                fclose(f);
+                printf("\ndone - %zd", seq);
+            }
+            break;
+        }
+        case 'c':
+        {
+            //WRITE BINARY FILES
+            printf("\nWRITE BINARY FILES");
+            for (size_t seq = 0; seq < 20; seq++)
+            {
+                string fname = "[0-2^32-1]_Scaled_" + to_string(seq) + ".bin";
+                FILE* write_ptr;
+                write_ptr = fopen(fname.c_str(), "wb");  // w for write, b for binary
+                unsigned int num = 0;
+                for (size_t i = 0; i < 3500000; i++)
+                {
+                    num = KT_RNG_getRandom(0xFFFFFFFF);
+                    fwrite(&num, sizeof(num), 1, write_ptr);
+                }
+                fclose(write_ptr);
+                printf("\ndone - %zd", seq);
+            }
+            break;
+        }
+
+        case 'd':
+        {
+            // WRITE FLOAT FILES
+            printf("\nWRITE FLOAT FILES");
+            for (size_t seq = 0; seq < 20; seq++)
+            {
+                string fname = "Float_" + to_string(seq) + ".txt";
+
+                FILE* f = fopen(fname.c_str(), "w");
+                for (size_t deck = 0; deck < 300000; deck++)
+                {
+                    float num = (float)(KT_RNG_getRandom(0xFFFFFFFF) / (float)0xFFFFFFFF);
+                    fprintf(f, "%.8f\n", num);
+                }
+                fclose(f);
+                printf("\ndone - %zd", seq);
+            }
+            break;
+        }
+        case 'e':
+        {
+            // WRITE DECK FILES
+            printf("\nWRITE DECK FILES");
+            uint8_t thedeck[52];
+            for (size_t seq = 0; seq < 20; seq++)
+            {
+                string fname = "Deck_" + to_string(seq) + ".txt";
+
+                FILE* f = fopen(fname.c_str(), "w");
+                for (size_t deck = 0; deck < 150000; deck++)
+                {
+                    shuffle(thedeck, 52);
+                    for (size_t i = 0; i < 52; i++)
+                    {
+                        fprintf(f, "%d ", thedeck[i]);
+                    }
+                    fprintf(f, "\n");
+                }
+                fclose(f);
+                printf("\ndone - %zd", seq);
+            }
+
+            break;
+        }
+        default:
+            printf("Non recognized param\n");
+            exit(0);
+        }
+    }
+
+/*
+    // WRITE ASCII DECKS on stdout
     for (size_t i = 0; i < 100000000000; i++)
     {
         uint8_t data[52];
@@ -245,7 +353,26 @@ int main(int argc, char* argv[])
         }
         printf("-- \n");
     }
-    
+*/
+
+/*
+    // WRITE A BINARY FILE WITH 5 BILLIONS RND
+    FILE* write_ptr;
+    write_ptr = fopen("test.bin", "wb");  // w for write, b for binary
+    unsigned int num = 0;
+    for (size_t i = 0; i < 5000000000; i++)
+    {
+        if (i % 10000000 == 0)
+        {
+            float pc = ((float)i / 5000000000.0f) *100.0f;
+            printf("\n - %s", to_string(pc).c_str());
+        }
+        num = KT_RNG_getRandom(0xFFFFFFFF);
+        fwrite(&num, sizeof(num), 1, write_ptr);
+    }
+    fclose(write_ptr);
+*/
+
 /*
     // WRITE BINARY ON STDOUT
     fflush(stdout);
@@ -258,11 +385,11 @@ int main(int argc, char* argv[])
     }
 */
 
-    //// WRITE ASCII RNDs
+    //// WRITE ASCII RNDs on console
     //for (size_t i = 0; i < 100000000000; i++)
     //{
     //    printf("\n");
-    //    printf(to_string(KT_RNG_getRandom(2)).c_str());
+    //    printf(to_string(KT_RNG_getRandom(1)).c_str());
     //}
 
     return 0;
