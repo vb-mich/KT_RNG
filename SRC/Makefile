@@ -1,7 +1,7 @@
 
 .PHONY: all clean
 
-PROJECT_NAME       ?= vbRNG.so
+PROJECT_NAME       ?= KT_RNG.so
 RAYLIB_VERSION     ?= 3.5.0
 PROJPATH           ?= './'
 
@@ -91,7 +91,7 @@ ifeq ($(BUILD_MODE),DEBUG)
     CFLAGS += -g
 
 else
-    CFLAGS += -s -O1
+    CFLAGS += -s -O2
 endif
 
 # Additional flags for compiler (if desired)
@@ -166,7 +166,7 @@ endif
 
 # Define all source files required
 PROJECT_SOURCE_FILES ?= \
-    vbRNG.cpp
+    KT_RNG.cpp
 
 # Define all object files from source files
 OBJS = $(patsubst %.cpp, %.o, $(PROJECT_SOURCE_FILES))

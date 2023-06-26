@@ -1,4 +1,4 @@
-﻿#include "KT_RNG.h"
+#include "KT_RNG.h"
 std::mutex mtMutex;
 std::thread controlThread;
 bool initialized = false;
@@ -10,14 +10,20 @@ bool initialized = false;
 static unsigned long long mt[NN];
 static int mti = NN + 1;
 
+/// <summary>
+/// Counts the leading zeroes of any given 32 bit number
+/// </summary>
+/// <param name="x"></param>
+/// <returns>How many leading zeroes the number has</returns>
 int clzll(unsigned long long x) {
-    // Initialize the count to the size of the long long type in bits
-    int count = CHAR_BIT * sizeof(unsigned long long);
-    // Shift the bits of x right until a set bit is found
-    while ((x & (1ull << (count - 1))) == 0 && count > 0) {
-        --count;
-    }
-    return count;
+    unsigned y;
+    int n = 32;
+    y = x >> 16; if (y != 0) { n = n - 16; x = y; }
+    y = x >> 8; if (y != 0) { n = n - 8; x = y; }
+    y = x >> 4; if (y != 0) { n = n - 4; x = y; }
+    y = x >> 2; if (y != 0) { n = n - 2; x = y; }
+    y = x >> 1; if (y != 0) return n - 2;
+    return n - x;
 }
 
 void init_genrand64(unsigned long long seed)
@@ -146,7 +152,7 @@ void KT_RNG_controlCycle()
 }
 
 /// <summary>
-/// Generate a random number between 0 and (2^32)-1
+/// Generate a random number between 0 and limit (included)
 /// </summary>
 /// <returns>A random number</returns>
 unsigned int KT_RNG_getRandom(unsigned int limit)
@@ -158,23 +164,45 @@ unsigned int KT_RNG_getRandom(unsigned int limit)
 
     KT_RNG_discardNumbers(discards);
 
-    mtMutex.lock();
+    unsigned int neededBits = 32 - clzll(limit);
+    unsigned int POTMASK = pow(2, neededBits) - 1;
+    //l'estratto deve essere minore del limit
 
-    unsigned int r = 0;
-    int remaining_bits = CHAR_BIT * sizeof(uint32_t);
-    while (remaining_bits > 0) {
-        uint64_t t = genrand64_int64();
-        r = (r << remaining_bits) | (t >> (64 - remaining_bits));
-        int bits_used = 64 - clzll(t);
-        remaining_bits -= bits_used;
+    int remaining_bits = 64;
+    unsigned int cycled = 0;
+    unsigned int check = 0;
+    uint64_t t,r = 0;
+    do
+    {
+        cycled = 0;
+        remaining_bits = 64;
+        mtMutex.lock();
+        t = genrand64_int64();
+        mtMutex.unlock();
+        while (remaining_bits > 0)
+        {
+            r = (t >> (neededBits * cycled));
+            check = r & POTMASK;
+            if (check <= limit)
+                return check;
+            cycled++;
+            remaining_bits -= (neededBits * cycled);
+        }
+    } while (remaining_bits <= 0);
+}
+
+// Unbiased shuffling using Fisher–Yates algorithm
+void shuffle(uint8_t* arr, uint32_t n) {
+    int i, j, tmp;
+
+    for (size_t i = 0; i < n; i++) { arr[i] = i; }
+
+    for (i = n - 1; i > 0; i--) {
+        j = KT_RNG_getRandom(i);
+        tmp = arr[j];
+        arr[j] = arr[i];
+        arr[i] = tmp;
     }
-
-    while (r >= limit) {
-        r = r % limit;
-    }
-
-    mtMutex.unlock();
-    return r;
 }
 
 extern "C"
@@ -193,16 +221,51 @@ extern "C"
     {
         return KT_RNG_getRandom(limit);
     }
+
+    void shuffleDeck(uint8_t* data, uint32_t length)
+    {
+        shuffle(data, length);
+    }
 }
 
 int main(int argc, char* argv[])
 {
     startRNG(time(NULL));
+
+    
+    // WRITE ASCII DECKS
     for (size_t i = 0; i < 100000000000; i++)
     {
-        printf(to_string(KT_RNG_getRandom(0xFFFFFFFF)).c_str());
-        printf("\n");
-
+        uint8_t data[52];
+        shuffleDeck(data, 52);
+        printf("~ ");
+        for (size_t i = 0; i < 52; i++)
+        {
+           printf("%s, ", to_string(data[i]).c_str());
+        }
+        printf("-- \n");
     }
+    
+/*
+    // WRITE BINARY ON STDOUT
+    fflush(stdout);
+    unsigned int num = 0;
+
+    for (size_t i = 0; i < 100000000000; i++)
+    {
+		num = KT_RNG_getRandom(0xFFFFFFFF);
+		write(1, &num, sizeof(num));
+    }
+*/
+
+    //// WRITE ASCII RNDs
+    //for (size_t i = 0; i < 100000000000; i++)
+    //{
+    //    printf("\n");
+    //    printf(to_string(KT_RNG_getRandom(2)).c_str());
+    //}
+
     return 0;
+
+
 }

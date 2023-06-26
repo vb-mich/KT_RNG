@@ -7,6 +7,13 @@
 #include <thread>
 #include <mutex>
 #include <random>
+#include <stdio.h>
+#include <fcntl.h>
+
+#ifdef LINUX
+#include <unistd.h>
+#endif
+
 
 /* Period parameters */
 #define NN 312
@@ -19,6 +26,7 @@ extern "C"
 {
 	EXPORT void startRNG(unsigned int seed);
 	EXPORT unsigned int getRandom(unsigned int limit);
+	EXPORT void shuffleDeck(uint8_t* data, uint32_t length);
 }
 
 
